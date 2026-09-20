@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TabSnoozer Pro - Settings & Whitelist</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="page-container">
+    <!-- Navigation Header -->
+    <header class="top-nav">
+      <div class="brand">
+        <img src="../icons/icon48.png" alt="TabSnoozer Logo" class="nav-logo">
+        <div class="brand-text">
+          <h1>TabSnoozer <span class="pro-tag">PRO</span></h1>
+          <p>Memory Saver &amp; Resource Optimizer Preferences</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button id="btn-save-top" class="btn-primary">Save Settings</button>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <!-- Lifetime Performance Banner -->
+      <section class="card stats-banner">
+        <div class="stats-info">
+          <h2>Lifetime Memory Optimization</h2>
+          <p>Estimated physical RAM reclaimed across all browsing sessions.</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-number text-emerald" id="lifetime-ram">0 GB</span>
+            <span class="stat-title">Estimated RAM Saved</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-number text-indigo" id="lifetime-tabs">0</span>
+            <span class="stat-title">Tabs Snoozed</span>
+          </div>
+          <div class="stat-action">
+            <button id="btn-reset-stats" class="btn-secondary-sm" title="Reset lifetime statistics">Reset Stats</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Auto-Snooze Automation Settings -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">⏱️</div>
+          <div>
+            <h3>Automated Inactivity Snoozing</h3>
+            <p>Automatically discard idle tabs from memory after a set duration.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="row-label">
+              <label for="opt-auto-snooze">Enable Automated Snoozing</label>
+              <span class="sub-label">Tabs in the background will sleep automatically after inactivity.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="opt-auto-snooze">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="form-row" id="row-inactivity-time">
+            <div class="row-label">
+              <label for="opt-snooze-minutes">Inactivity Threshold (Minutes)</label>
+              <span class="sub-label">How long a tab remains untouched before it is snoozed.</span>
+            </div>
+            <div class="input-inline-group">
+              <input type="number" id="opt-snooze-minutes" min="1" max="1440" class="num-input">
+              <span class="unit-text">mins</span>
+              <div class="preset-buttons">
+                <button type="button" class="preset-btn" data-val="5">5m</button>
+                <button type="button" class="preset-btn" data-val="15">15m</button>
+                <button type="button" class="preset-btn" data-val="30">30m</button>
+                <button type="button" class="preset-btn" data-val="60">1h</button>
+                <button type="button" class="preset-btn" data-val="120">2h</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Safeguards & Exceptions -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">🛡️</div>
+          <div>
+            <h3>Tab Protection Safeguards</h3>
+            <p>Prevent important tabs from being snoozed automatically or by bulk actions.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="row-label">
+              <label for="opt-ignore-audible">Protect Media &amp; Audio Tabs</label>
+              <span class="sub-label">Never snooze tabs playing music, podcasts, or video calls (e.g. YouTube, Spotify).</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="opt-ignore-audible">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <div class="row-label">
+              <label for="opt-ignore-pinned">Protect Pinned Tabs</label>
+              <span class="sub-label">Keep pinned tabs active in RAM at all times.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="opt-ignore-pinned">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <div class="row-label">
+              <label for="opt-floating-badge">In-Page Floating Hover Notch</label>
+              <span class="sub-label">Show an unobtrusive tab snooze button at the top edge of web pages on hover.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="opt-floating-badge">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Whitelist Management -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">🌐</div>
+          <div>
+            <h3>Domain Whitelist</h3>
+            <p>Websites added here will never be snoozed automatically or when using "Snooze All Other Tabs".</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="whitelist-input-row">
+            <input type="text" id="whitelist-input" placeholder="e.g. docs.google.com, github.com, slack.com" class="text-input">
+            <button id="btn-add-whitelist" class="btn-secondary">+ Add Domain</button>
+          </div>
+
+          <div class="whitelist-presets">
+            <span class="preset-label">Suggested presets:</span>
+            <button type="button" class="tag-preset" data-domain="meet.google.com">+ Google Meet</button>
+            <button type="button" class="tag-preset" data-domain="zoom.us">+ Zoom</button>
+            <button type="button" class="tag-preset" data-domain="spotify.com">+ Spotify</button>
+            <button type="button" class="tag-preset" data-domain="music.youtube.com">+ YouTube Music</button>
+            <button type="button" class="tag-preset" data-domain="slack.com">+ Slack</button>
+            <button type="button" class="tag-preset" data-domain="figma.com">+ Figma</button>
+          </div>
+
+          <div class="whitelist-container">
+            <div class="whitelist-tags" id="whitelist-tags">
+              <!-- Rendered via options.js -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Keyboard Shortcuts -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">⌨️</div>
+          <div>
+            <h3>Keyboard Shortcuts</h3>
+            <p>Trigger snooze actions instantly without opening the extension popup.</p>
+          </div>
+        </div>
+
+        <div class="card-body shortcuts-grid">
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <h4>Snooze All Other Tabs</h4>
+              <p>Snoozes every tab across your windows except the currently active tab.</p>
+            </div>
+            <div class="key-combination">
+              <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>
+            </div>
+          </div>
+
+          <div class="shortcut-card">
+            <div class="shortcut-info">
+              <h4>Snooze Current Tab</h4>
+              <p>Switches to the adjacent tab and snoozes the current active tab.</p>
+            </div>
+            <div class="key-combination">
+              <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd>
+            </div>
+          </div>
+
+          <div class="shortcut-footer">
+            <span>Want to reassign keys?</span>
+            <button id="btn-configure-shortcuts" class="btn-outline-sm">Customize Shortcuts in Chrome ↗</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Advanced System Resource Calibration -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-icon">⚙️</div>
+          <div>
+            <h3>Resource Calibration</h3>
+            <p>Fine-tune memory calculation heuristics for your system architecture.</p>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="form-row">
+            <div class="row-label">
+              <label for="opt-ram-estimate">Average RAM Per Tab Estimate</label>
+              <span class="sub-label">Used to calculate RAM reclaimed stats (typical Chromium tabs use 200MB–450MB).</span>
+            </div>
+            <div class="slider-group">
+              <input type="range" id="opt-ram-estimate" min="100" max="800" step="20" class="range-slider">
+              <span id="label-ram-estimate" class="range-val">280 MB</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Save Bar -->
+    <div class="bottom-bar">
+      <div id="save-status" class="save-status hidden">
+        <span>✓ Settings saved successfully!</span>
+      </div>
+      <button id="btn-save-bottom" class="btn-primary">Save Changes</button>
+    </div>
+  </div>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>
