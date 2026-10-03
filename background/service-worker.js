@@ -1,9 +1,10 @@
 // background/service-worker.js - Core background engine for TabSnoozer
 import { getSettings, saveSettings, incrementSnoozeStats } from '../shared/storage.js';
-import { canTabBeSnoozed, getDomain } from '../shared/utils.js';
+import { canTabBeSnoozed, getDomain, isSpecialUrl } from '../shared/utils.js';
 
 const ALARM_NAME = 'tabsnoozer_inactivity_check';
 let tabActivityMap = new Map();
+let restorePromise = null;
 
 // Helper to save activity map to session storage
 async function persistActivityMap() {
@@ -15,26 +16,46 @@ async function persistActivityMap() {
   }
 }
 
-// Restore activity map on startup
+// Restore activity map on startup and prune stale tabs
 async function restoreActivityMap() {
-  try {
-    const data = await chrome.storage.session.get('tabActivityMap');
-    if (data && Array.isArray(data.tabActivityMap)) {
-      tabActivityMap = new Map(data.tabActivityMap);
+  if (restorePromise) return restorePromise;
+  restorePromise = (async () => {
+    try {
+      const data = await chrome.storage.session.get('tabActivityMap');
+      if (data && Array.isArray(data.tabActivityMap)) {
+        tabActivityMap = new Map(data.tabActivityMap);
+      }
+    } catch (e) {
+      tabActivityMap = new Map();
     }
-  } catch (e) {
-    tabActivityMap = new Map();
-  }
 
-  // Populate any currently open tabs not yet in the map
-  const tabs = await chrome.tabs.query({});
-  const now = Date.now();
-  for (const tab of tabs) {
-    if (!tabActivityMap.has(tab.id)) {
-      tabActivityMap.set(tab.id, now);
+    try {
+      const tabs = await chrome.tabs.query({});
+      const activeIds = new Set(tabs.map((t) => t.id));
+
+      // Prune dead tab IDs to prevent storage memory leak
+      for (const id of tabActivityMap.keys()) {
+        if (!activeIds.has(id)) {
+          tabActivityMap.delete(id);
+        }
+      }
+
+      // Populate any currently open tabs not yet in the map
+      const now = Date.now();
+      for (const tab of tabs) {
+        if (!tabActivityMap.has(tab.id)) {
+          tabActivityMap.set(tab.id, now);
+        }
+      }
+      await persistActivityMap();
+    } catch (e) {
+      // Ignore query error on early boot
     }
-  }
-  await persistActivityMap();
+  })();
+
+  const result = await restorePromise;
+  restorePromise = null;
+  return result;
 }
 
 // Update tab activity
@@ -60,16 +81,24 @@ export async function snoozeTab(tabId) {
       return { success: true, alreadyDiscarded: true };
     }
 
+    if (isSpecialUrl(tab.url || tab.pendingUrl)) {
+      return { success: false, error: 'Internal browser pages cannot be snoozed' };
+    }
+
     // If tab is currently active, activate an adjacent tab first
     if (tab.active) {
       const windowTabs = await chrome.tabs.query({ windowId: tab.windowId });
       const otherTabs = windowTabs.filter((t) => t.id !== tabId);
-      if (otherTabs.length > 0) {
-        // Find next or previous tab
-        const nextTab = otherTabs.find((t) => t.index > tab.index) || otherTabs[otherTabs.length - 1];
-        if (nextTab) {
-          await chrome.tabs.update(nextTab.id, { active: true });
-        }
+      if (otherTabs.length === 0) {
+        return { success: false, error: 'Cannot snooze the only tab in the window' };
+      }
+
+      // Find next or previous tab
+      const nextTab = otherTabs.find((t) => t.index > tab.index) || otherTabs[otherTabs.length - 1];
+      if (nextTab) {
+        await chrome.tabs.update(nextTab.id, { active: true });
+        // Give Chromium a brief tick to finalize active tab switch
+        await new Promise((r) => setTimeout(r, 60));
       }
     }
 
@@ -131,12 +160,21 @@ export async function snoozeAllOtherTabs() {
 export async function wakeTab(tabId) {
   try {
     const tab = await chrome.tabs.get(tabId);
-    if (!tab) return { success: false };
+    if (!tab) return { success: false, error: 'Tab not found' };
 
-    if (tab.discarded) {
+    // In Chromium, discarded tabs automatically reload when focused.
+    // If the tab is already active and discarded, reload it directly.
+    if (tab.active && tab.discarded) {
       await chrome.tabs.reload(tabId);
+    } else {
+      await chrome.tabs.update(tabId, { active: true });
+      if (tab.windowId) {
+        try {
+          await chrome.windows.update(tab.windowId, { focused: true });
+        } catch (_) {}
+      }
     }
-    await chrome.tabs.update(tabId, { active: true });
+
     updateBadge();
     return { success: true };
   } catch (err) {
@@ -145,18 +183,28 @@ export async function wakeTab(tabId) {
 }
 
 /**
- * Wake all discarded tabs
+ * Wake all discarded tabs in controlled batches
  */
 export async function wakeAllTabs() {
   const allTabs = await chrome.tabs.query({ discarded: true });
   let wokenCount = 0;
 
-  for (const tab of allTabs) {
-    try {
-      await chrome.tabs.reload(tab.id);
-      wokenCount++;
-    } catch (e) {
-      // Ignore reload error
+  // Process in small batches of 4 to prevent network and CPU choking
+  const batchSize = 4;
+  for (let i = 0; i < allTabs.length; i += batchSize) {
+    const batch = allTabs.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map(async (tab) => {
+        try {
+          await chrome.tabs.reload(tab.id);
+          wokenCount++;
+        } catch (e) {
+          // Ignore reload error
+        }
+      })
+    );
+    if (i + batchSize < allTabs.length) {
+      await new Promise((r) => setTimeout(r, 100));
     }
   }
 
@@ -169,6 +217,7 @@ export async function wakeAllTabs() {
 // ==========================================
 
 async function checkInactivity() {
+  await restoreActivityMap();
   const settings = await getSettings();
   if (!settings.autoSnoozeEnabled) return;
 
@@ -182,7 +231,13 @@ async function checkInactivity() {
     if (tab.active || tab.discarded) continue;
     if (!canTabBeSnoozed(tab, settings, { allowActive: false })) continue;
 
-    const lastActive = tabActivityMap.get(tab.id) || 0;
+    let lastActive = tabActivityMap.get(tab.id);
+    if (!lastActive) {
+      // Tab was not tracked yet; start tracking now to avoid premature discard
+      tabActivityMap.set(tab.id, now);
+      continue;
+    }
+
     const idleTime = now - lastActive;
 
     if (idleTime >= thresholdMs) {
@@ -257,14 +312,19 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   } else if (info.menuItemId === 'snooze-all-other') {
     await snoozeAllOtherTabs();
   } else if (info.menuItemId === 'whitelist-current-domain') {
-    if (tab && tab.url) {
+    if (tab && tab.url && (tab.url.startsWith('http://') || tab.url.startsWith('https://'))) {
       const domain = getDomain(tab.url);
       if (domain) {
         const settings = await getSettings();
-        if (!settings.whitelistDomains.includes(domain)) {
-          settings.whitelistDomains.push(domain);
-          await saveSettings({ whitelistDomains: settings.whitelistDomains });
+        const list = settings.whitelistDomains || [];
+        if (!list.includes(domain)) {
+          list.push(domain);
+          await saveSettings({ whitelistDomains: list });
         }
+        // Visual confirmation on extension badge
+        chrome.action.setBadgeText({ text: '✓' });
+        chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
+        setTimeout(updateBadge, 2000);
       }
     }
   }
@@ -313,10 +373,12 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 
 chrome.windows.onFocusChanged.addListener(async (windowId) => {
   if (windowId !== chrome.windows.WINDOW_ID_NONE) {
-    const [activeTab] = await chrome.tabs.query({ active: true, windowId });
-    if (activeTab) {
-      markTabActive(activeTab.id);
-    }
+    try {
+      const [activeTab] = await chrome.tabs.query({ active: true, windowId });
+      if (activeTab) {
+        markTabActive(activeTab.id);
+      }
+    } catch (_) {}
   }
   updateBadge();
 });
@@ -339,7 +401,6 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onStartup.addListener(async () => {
-  setupContextMenus();
   await restoreActivityMap();
   chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 });
   updateBadge();
@@ -347,7 +408,6 @@ chrome.runtime.onStartup.addListener(async () => {
 
 // Initial boot
 restoreActivityMap();
-chrome.alarms.create(ALARM_NAME, { periodInMinutes: 1 });
 updateBadge();
 
 // ==========================================
@@ -384,6 +444,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
       case 'getActivityMap': {
+        await restoreActivityMap();
         sendResponse({
           activityMap: Object.fromEntries(tabActivityMap)
         });

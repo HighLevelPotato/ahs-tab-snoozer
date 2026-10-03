@@ -66,7 +66,7 @@ A modern, high-performance Chromium extension (Manifest V3) designed to reclaim 
 
 To customize these shortcuts:
 1. Navigate to `chrome://extensions/shortcuts` in your browser.
-2. Scroll to **TabSnoozer Pro - Save RAM & Snooze Tabs**.
+2. Scroll to **TabSnoozer Pro**.
 3. Click the pencil icon next to any command and enter your preferred key combination.
 
 ---
@@ -76,6 +76,7 @@ To customize these shortcuts:
 ```
 chrome-tab-snoozer/
 ├── manifest.json              # Chrome Manifest V3 descriptor
+├── PRIVACY_POLICY.md          # Store-compliant privacy policy
 ├── icons/                     # Extension icons (16px, 32px, 48px, 128px)
 ├── background/
 │   └── service-worker.js      # Inactivity checker, alarm, context menus, shortcuts
@@ -89,7 +90,7 @@ chrome-tab-snoozer/
 │   └── options.js             # Options logic, whitelist manager, and stats reset
 ├── content/
 │   ├── content.js             # In-page floating hover tab snoozer
-│   └── content.css            # Styles for in-page hover trigger & shadow DOM
+│   └── content.css            # Encapsulated styles for in-page hover trigger
 └── shared/
     ├── storage.js             # Type-safe sync storage helpers & defaults
     └── utils.js               # Domain helpers, byte formatters, tab validation

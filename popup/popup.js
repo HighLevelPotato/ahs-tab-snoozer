@@ -171,7 +171,7 @@ function createTabCardElement(tab) {
   // Favicon
   let faviconHtml = '';
   if (tab.favIconUrl && !tab.favIconUrl.startsWith('chrome://')) {
-    faviconHtml = `<img src="${escapeHtml(tab.favIconUrl)}" class="tab-favicon" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="tab-favicon-fallback" style="display:none;">${domain ? domain.charAt(0).toUpperCase() : '•'}</div>`;
+    faviconHtml = `<img src="${escapeHtml(tab.favIconUrl)}" class="tab-favicon" alt="" /><div class="tab-favicon-fallback" style="display:none;">${domain ? domain.charAt(0).toUpperCase() : '•'}</div>`;
   } else {
     faviconHtml = `<div class="tab-favicon-fallback">${domain ? domain.charAt(0).toUpperCase() : '•'}</div>`;
   }
@@ -209,15 +209,22 @@ function createTabCardElement(tab) {
     </div>
   `;
 
-  // Row click to switch to tab
+  // Attach CSP-compliant error listener for favicon
+  const faviconImg = li.querySelector('.tab-favicon');
+  if (faviconImg) {
+    faviconImg.addEventListener('error', () => {
+      faviconImg.style.display = 'none';
+      const fallback = li.querySelector('.tab-favicon-fallback');
+      if (fallback) fallback.style.display = 'flex';
+    });
+  }
+
+  // Row click to switch to tab (Chromium automatically reloads discarded tabs upon focus)
   li.addEventListener('click', async (e) => {
     // If clicked on an action button, let the button handler handle it
     if (e.target.closest('.tab-actions')) return;
 
     try {
-      if (tab.discarded) {
-        await chrome.tabs.reload(tab.id);
-      }
       await chrome.tabs.update(tab.id, { active: true });
       if (tab.windowId) {
         await chrome.windows.update(tab.windowId, { focused: true });
@@ -235,10 +242,16 @@ function createTabCardElement(tab) {
       e.stopPropagation();
       btnSnooze.disabled = true;
       btnSnooze.textContent = '...';
-      await new Promise((resolve) => {
+      const response = await new Promise((resolve) => {
         chrome.runtime.sendMessage({ action: 'snoozeTab', tabId: tab.id }, resolve);
       });
-      await refreshTabs();
+      if (response && !response.success && response.error) {
+        btnSnooze.textContent = '⚠️';
+        btnSnooze.title = response.error;
+        setTimeout(refreshTabs, 1600);
+      } else {
+        await refreshTabs();
+      }
     });
   }
 

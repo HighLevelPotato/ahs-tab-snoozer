@@ -14,3 +14,7 @@ yarn-debug.log*
 # IDE
 .vscode/
 .idea/
+
+# Backups
+_backup*/
+*.zip

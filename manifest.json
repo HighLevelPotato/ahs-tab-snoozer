@@ -1,17 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "TabSnoozer Pro - Save RAM & Snooze Tabs",
-  "version": "1.0.0",
+  "name": "TabSnoozer Pro",
+  "short_name": "TabSnoozer",
+  "version": "2.0.0",
   "description": "Snooze tabs on demand or automatically after inactivity to reclaim memory and boost browser performance.",
   "permissions": [
     "tabs",
     "storage",
     "alarms",
-    "contextMenus",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "<all_urls>"
+    "contextMenus"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -55,16 +52,10 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*"],
       "js": ["content/content.js"],
-      "css": ["content/content.css"],
       "run_at": "document_idle"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["content/content.css", "icons/*"],
-      "matches": ["<all_urls>"]
     }
   ]
 }
+

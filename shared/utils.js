@@ -19,9 +19,9 @@ export function getDomain(rawUrl) {
   if (!rawUrl) return '';
   try {
     const url = new URL(rawUrl);
-    return url.hostname.replace(/^www\./, '');
+    return (url.hostname || '').replace(/^www\./, '').toLowerCase();
   } catch {
-    return rawUrl;
+    return '';
   }
 }
 
@@ -36,10 +36,14 @@ export function isSpecialUrl(rawUrl) {
     lower.startsWith('chrome-extension://') ||
     lower.startsWith('edge://') ||
     lower.startsWith('brave://') ||
+    lower.startsWith('opera://') ||
+    lower.startsWith('vivaldi://') ||
     lower.startsWith('devtools://') ||
     lower.startsWith('view-source:') ||
     lower.startsWith('about:') ||
-    lower === 'about:blank'
+    lower === 'about:blank' ||
+    lower.startsWith('data:') ||
+    lower.startsWith('blob:')
   );
 }
 

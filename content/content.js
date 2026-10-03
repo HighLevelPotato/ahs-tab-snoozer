@@ -4,6 +4,9 @@
   // Only inject in top window (avoid iframe noise)
   if (window.top !== window.self) return;
 
+  // Only inject into HTML pages
+  if (!(document.documentElement instanceof HTMLElement)) return;
+
   // Prevent multiple injections
   if (document.getElementById('tabsnoozer-root')) return;
 
@@ -13,6 +16,7 @@
 
   async function init() {
     try {
+      if (!chrome.runtime?.id) return;
       const data = await chrome.storage.sync.get({
         showFloatingHoverBadge: true,
         mbPerTabEstimate: 280
@@ -31,6 +35,7 @@
 
     rootContainer = document.createElement('div');
     rootContainer.id = 'tabsnoozer-root';
+    rootContainer.style.cssText = 'all: initial !important; display: block !important; position: static !important;';
     shadowRoot = rootContainer.attachShadow({ mode: 'open' });
 
     // Inject styles directly inside shadow DOM for instant rendering & CSP isolation
@@ -231,23 +236,28 @@
     if (btnSnoozeCurrent) {
       btnSnoozeCurrent.addEventListener('click', (e) => {
         e.stopPropagation();
-        chrome.runtime.sendMessage({ action: 'snoozeCurrentTab' });
+        try {
+          chrome.runtime.sendMessage({ action: 'snoozeCurrentTab' });
+        } catch (_) {}
       });
     }
 
     if (btnSnoozeOthers) {
       btnSnoozeOthers.addEventListener('click', (e) => {
         e.stopPropagation();
-        chrome.runtime.sendMessage({ action: 'snoozeAllOtherTabs' }, (response) => {
-          if (btnSnoozeOthers) {
-            btnSnoozeOthers.textContent = `✓ Snoozed ${response?.snoozedCount || 0} tabs!`;
-            setTimeout(() => {
-              if (btnSnoozeOthers) {
-                btnSnoozeOthers.innerHTML = `<span>💤 Snooze Other Tabs</span><span class="tabsnoozer-badge-tag">Alt+Shift+S</span>`;
-              }
-            }, 2000);
-          }
-        });
+        try {
+          chrome.runtime.sendMessage({ action: 'snoozeAllOtherTabs' }, (response) => {
+            if (chrome.runtime.lastError) return;
+            if (btnSnoozeOthers) {
+              btnSnoozeOthers.textContent = `✓ Snoozed ${response?.snoozedCount || 0} tabs!`;
+              setTimeout(() => {
+                if (btnSnoozeOthers) {
+                  btnSnoozeOthers.innerHTML = `<span>💤 Snooze Other Tabs</span><span class="tabsnoozer-badge-tag">Alt+Shift+S</span>`;
+                }
+              }, 2000);
+            }
+          });
+        } catch (_) {}
       });
     }
 

@@ -40,6 +40,17 @@ async function init() {
   setupListeners();
 }
 
+function syncPresetButtons(val) {
+  const currentVal = String(val);
+  presetBtns.forEach((btn) => {
+    if (btn.dataset.val === currentVal) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
 function populateUI() {
   // Lifetime Stats
   lifetimeRam.textContent = formatBytes(settings.totalRamSavedMB || 0);
@@ -47,7 +58,9 @@ function populateUI() {
 
   // Inactivity Settings
   optAutoSnooze.checked = !!settings.autoSnoozeEnabled;
-  optSnoozeMinutes.value = settings.autoSnoozeMinutes || 30;
+  const mins = settings.autoSnoozeMinutes || 30;
+  optSnoozeMinutes.value = mins;
+  syncPresetButtons(mins);
   updateInactivityRowState();
 
   // Safeguards
@@ -68,6 +81,9 @@ function updateInactivityRowState() {
   if (rowInactivityTime) {
     rowInactivityTime.style.opacity = optAutoSnooze.checked ? '1' : '0.4';
     optSnoozeMinutes.disabled = !optAutoSnooze.checked;
+    presetBtns.forEach((btn) => {
+      btn.disabled = !optAutoSnooze.checked;
+    });
   }
 }
 
@@ -81,7 +97,9 @@ function cleanDomain(input) {
   str = str.replace(/^www\./, '');
   str = str.split('/')[0];
   str = str.split(':')[0]; // remove port
-  return str;
+  // Remove any leading wildcards
+  str = str.replace(/^\*\.?/, '');
+  return str.trim();
 }
 
 function renderWhitelistTags() {
@@ -89,22 +107,31 @@ function renderWhitelistTags() {
   const list = settings.whitelistDomains || [];
 
   if (list.length === 0) {
-    whitelistTagsContainer.innerHTML = '<span style="color: var(--text-muted); font-size: 12px;">No domains currently whitelisted.</span>';
+    const emptySpan = document.createElement('span');
+    emptySpan.style.color = 'var(--text-muted)';
+    emptySpan.style.fontSize = '12px';
+    emptySpan.textContent = 'No domains currently whitelisted.';
+    whitelistTagsContainer.appendChild(emptySpan);
     return;
   }
 
   list.forEach((domain) => {
     const tag = document.createElement('div');
     tag.className = 'tag-item';
-    tag.innerHTML = `
-      <span>${domain}</span>
-      <button class="tag-remove-btn" title="Remove ${domain}">✕</button>
-    `;
 
-    tag.querySelector('.tag-remove-btn').addEventListener('click', () => {
+    const span = document.createElement('span');
+    span.textContent = domain;
+
+    const btnRemove = document.createElement('button');
+    btnRemove.className = 'tag-remove-btn';
+    btnRemove.setAttribute('title', `Remove ${domain}`);
+    btnRemove.textContent = '✕';
+    btnRemove.addEventListener('click', () => {
       removeWhitelistDomain(domain);
     });
 
+    tag.appendChild(span);
+    tag.appendChild(btnRemove);
     whitelistTagsContainer.appendChild(tag);
   });
 }
@@ -170,7 +197,12 @@ function setupListeners() {
   presetBtns.forEach((btn) => {
     btn.addEventListener('click', () => {
       optSnoozeMinutes.value = btn.dataset.val;
+      syncPresetButtons(btn.dataset.val);
     });
+  });
+
+  optSnoozeMinutes.addEventListener('input', () => {
+    syncPresetButtons(optSnoozeMinutes.value);
   });
 
   // Whitelist Add
@@ -195,8 +227,12 @@ function setupListeners() {
   });
 
   // Shortcut configuration button
-  btnConfigureShortcuts.addEventListener('click', () => {
-    chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+  btnConfigureShortcuts.addEventListener('click', async () => {
+    try {
+      await chrome.tabs.create({ url: 'chrome://extensions/shortcuts' });
+    } catch (err) {
+      console.warn('Could not navigate to chrome://extensions/shortcuts:', err);
+    }
   });
 
   // RAM estimate slider

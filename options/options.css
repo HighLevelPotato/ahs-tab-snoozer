@@ -326,6 +326,13 @@ input:checked + .toggle-slider:before {
   border-color: var(--accent-primary);
 }
 
+.preset-btn.active {
+  background: var(--accent-primary);
+  color: #ffffff;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+}
+
 /* Whitelist Section */
 .whitelist-input-row {
   display: flex;
