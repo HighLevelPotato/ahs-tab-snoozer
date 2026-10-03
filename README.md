@@ -95,3 +95,32 @@ chrome-tab-snoozer/
     ├── storage.js             # Type-safe sync storage helpers & defaults
     └── utils.js               # Domain helpers, byte formatters, tab validation
 ```
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+### How does TabSnoozer Pro save RAM compared to older tab suspenders?
+Unlike legacy extensions like *The Great Suspender* that replaced web pages with custom placeholder HTML (which broke back/forward history and risked losing open work), TabSnoozer Pro leverages Chromium’s native **`chrome.tabs.discard()`** API. This allows the browser kernel itself to purge the tab’s memory allocation while keeping the tab, its favicon, and its title intact in your tab strip.
+
+### Does snoozing a tab close it or lose my open work?
+**No.** Snoozed tabs stay visible in your tab bar. When you click back onto a snoozed tab, Chromium instantly wakes it up and restores its state. TabSnoozer also automatically protects tabs that are playing media, video calls, or pinned in your browser.
+
+### How much physical memory (RAM) does TabSnoozer actually reclaim?
+Modern Chromium tabs typically consume anywhere from **150MB to over 800MB+ of RAM each**, especially web apps like Google Docs, Figma, Jira, and social media feeds. Discarding 10 idle tabs can easily recover **2GB to 5GB of active system RAM**, drastically speeding up your operating system and preventing browser slowdowns.
+
+### Is TabSnoozer Pro safe, private, and tracker-free?
+**100% yes.** TabSnoozer Pro contains zero trackers, zero analytics, zero external network scripts, and zero ads. All tab management and domain whitelisting happen entirely on your local computer. It is completely open-source under the MIT license, and you can inspect every line of code in this repository.
+
+### Will background tabs playing music or video meetings get snoozed?
+**No.** Built-in safeguard heuristics prevent audible tabs (music, podcasts, YouTube, Google Meet, Zoom, Slack calls) and pinned tabs from ever being snoozed automatically. You can also add custom domains to your Whitelist in Settings.
+
+### Does TabSnoozer Pro work on Brave, Edge, Opera, or Vivaldi?
+**Yes.** TabSnoozer Pro is fully compatible with any Chromium-powered web browser (Google Chrome, Brave, Microsoft Edge, Opera, Vivaldi, Arc).
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) — free for personal and commercial use.
+
