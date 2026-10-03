@@ -1,6 +1,6 @@
 # TabSnoozer Pro 🌙
 
-A modern, high-performance Chromium extension (Manifest V3) designed to reclaim system RAM and optimize browser performance by automatically or manually snoozing idle tabs.
+> 🌙 High-performance Chromium extension to snooze your Chrome, Edge, or Brave tabs automatically, saving up to 80% RAM safely. Open-source, 100% private, and zero trackers.
 
 ![TabSnoozer Pro Banner](icons/icon128.png)
 
