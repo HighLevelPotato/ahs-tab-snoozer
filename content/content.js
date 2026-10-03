@@ -210,7 +210,7 @@
       </div>
       <div class="tabsnoozer-menu" id="ts-menu">
         <div class="tabsnoozer-menu-header">
-          <span class="tabsnoozer-menu-title">TabSnoozer Pro</span>
+          <span class="tabsnoozer-menu-title">AHS Tab Snoozer Pro</span>
           <button class="tabsnoozer-menu-close" id="ts-close" title="Hide for now">✕</button>
         </div>
         <button class="tabsnoozer-btn-primary" id="ts-snooze-current">

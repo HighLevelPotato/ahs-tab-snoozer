@@ -1,27 +1,27 @@
-# Privacy Policy for TabSnoozer Pro
+# Privacy Policy for AHS Tab Snoozer Pro
 
 **Effective Date:** October 3, 2026  
 **Last Updated:** October 3, 2026
 
-TabSnoozer Pro ("we", "our", or "the extension") is committed to protecting your privacy. This Privacy Policy explains our practices regarding user data and how information is handled.
+AHS Tab Snoozer Pro ("we", "our", or "the extension") is committed to protecting your privacy. This Privacy Policy explains our practices regarding user data and how information is handled.
 
 ---
 
 ## 1. Single Purpose & Core Functionality
-TabSnoozer Pro is a browser memory management extension designed to snooze idle tabs, discard unneeded memory from background tabs using native Chromium APIs, and boost browser performance.
+AHS Tab Snoozer Pro is a browser memory management extension designed to snooze idle tabs, discard unneeded memory from background tabs using native Chromium APIs, and boost browser performance.
 
 ---
 
 ## 2. Information We Do NOT Collect
 - **No Personal Information:** We do not collect names, email addresses, IP addresses, physical addresses, phone numbers, or passwords.
 - **No Remote Tracking or Analytics:** We do not use Google Analytics, cookies, telemetry, tracking pixels, or remote tracking scripts.
-- **No Data Transmission:** TabSnoozer Pro performs **zero** network requests. No data leaves your computer.
+- **No Data Transmission:** AHS Tab Snoozer Pro performs **zero** network requests. No data leaves your computer.
 - **No Data Selling or Sharing:** We do not sell, rent, monetize, or trade any user data to third parties, data brokers, advertisers, or affiliates.
 
 ---
 
 ## 3. How Permissions Are Used Locally
-TabSnoozer Pro operates 100% locally on your device. The permissions declared in `manifest.json` are utilized strictly for core local functionality:
+AHS Tab Snoozer Pro operates 100% locally on your device. The permissions declared in `manifest.json` are utilized strictly for core local functionality:
 
 - **`tabs`:** Used exclusively on your local device to read tab metadata (title, URL, and favicon) to display your open tabs in the popup dashboard, detect idle tabs, verify domain whitelist exceptions, and invoke `chrome.tabs.discard()` to free memory. Your browsing history and URLs are **never** logged, saved to external storage, or transmitted off your device.
 - **`storage`:** Used via `chrome.storage.sync` to save your user settings (such as inactivity duration thresholds, domain whitelist entries, and audio safeguards) across your logged-in Chrome profile, and via `chrome.storage.session` for temporary memory of tab activity timestamps during an active browsing session.
@@ -32,7 +32,7 @@ TabSnoozer Pro operates 100% locally on your device. The permissions declared in
 ---
 
 ## 4. Third-Party Services
-TabSnoozer Pro does not integrate with any third-party APIs, remote servers, or external advertising networks.
+AHS Tab Snoozer Pro does not integrate with any third-party APIs, remote servers, or external advertising networks.
 
 ---
 

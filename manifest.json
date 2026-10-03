@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "TabSnoozer Pro",
-  "short_name": "TabSnoozer",
+  "name": "AHS Tab Snoozer Pro",
+  "short_name": "AHS Tab Snoozer",
   "version": "2.0.0",
   "description": "Snooze tabs on demand or automatically after inactivity to reclaim memory and boost browser performance.",
   "permissions": [
@@ -18,7 +18,7 @@
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     },
-    "default_title": "TabSnoozer Pro"
+    "default_title": "AHS Tab Snoozer Pro"
   },
   "background": {
     "service_worker": "background/service-worker.js",
